@@ -13,7 +13,10 @@ BIN_DIR="${ZCLAUDE_BIN_DIR:-$HOME/.local/bin}"
 mkdir -p "$BIN_DIR"
 
 echo "Installing $CMD_NAME to $BIN_DIR ..."
-if command -v curl >/dev/null 2>&1; then
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [ -f "$SCRIPT_DIR/$CMD_NAME" ]; then
+  cp "$SCRIPT_DIR/$CMD_NAME" "$BIN_DIR/$CMD_NAME"
+elif command -v curl >/dev/null 2>&1; then
   curl -fsSL "$REPO_RAW/$CMD_NAME" -o "$BIN_DIR/$CMD_NAME"
 elif command -v wget >/dev/null 2>&1; then
   wget -qO "$BIN_DIR/$CMD_NAME" "$REPO_RAW/$CMD_NAME"
