@@ -1,0 +1,91 @@
+name: Windows PowerShell smoke test
+
+on:
+  push:
+    paths:
+      - "install.ps1"
+      - "zclaude.ps1"
+      - ".github/workflows/windows-test.yml"
+  pull_request:
+    paths:
+      - "install.ps1"
+      - "zclaude.ps1"
+      - ".github/workflows/windows-test.yml"
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Syntax-check both scripts
+        shell: pwsh
+        run: |
+          foreach ($f in @('install.ps1', 'zclaude.ps1')) {
+            $errors = $null
+            [System.Management.Automation.Language.Parser]::ParseFile($f, [ref]$null, [ref]$errors) | Out-Null
+            if ($errors.Count -gt 0) {
+              $errors | ForEach-Object { Write-Host "::error file=$f::$_" }
+              throw "$f has $($errors.Count) parse error(s)"
+            }
+          }
+          Write-Host "Syntax OK"
+
+      - name: Install from local clone (exercises the sibling-file fallback path)
+        shell: pwsh
+        run: |
+          .\install.ps1
+          $dest = Join-Path $env:LOCALAPPDATA 'Programs\zclaude'
+          if (-not (Test-Path (Join-Path $dest 'zclaude.ps1'))) { throw "zclaude.ps1 not installed" }
+          if (-not (Test-Path (Join-Path $dest 'zclaude.cmd'))) { throw "zclaude.cmd shim not installed" }
+          echo "ZCLAUDE_DEST=$dest" >> $env:GITHUB_ENV
+
+      - name: config / reset roundtrip
+        shell: pwsh
+        run: |
+          # Invoke through the .cmd shim, like real users do — it spawns zclaude.ps1
+          # as its own `powershell -File` process, so the script's own `exit` calls
+          # only end that child process instead of this whole CI step.
+          $shim = Join-Path $env:ZCLAUDE_DEST 'zclaude.cmd'
+          & $shim config "ci-test-key-123"
+          if ($LASTEXITCODE -ne 0) { throw "config exited $LASTEXITCODE" }
+          $configFile = Join-Path $env:APPDATA 'zclaude\config'
+          if (-not (Test-Path $configFile)) { throw "config file not written" }
+          $content = Get-Content $configFile -Raw
+          if ($content -notmatch 'ci-test-key-123') { throw "key not saved correctly" }
+
+          & $shim reset
+          if ($LASTEXITCODE -ne 0) { throw "reset exited $LASTEXITCODE" }
+          if (Test-Path $configFile) { throw "config file not removed by reset" }
+
+      - name: Launch without claude CLI on PATH exits 127 with a clear message
+        shell: pwsh
+        run: |
+          # pwsh 7.4+ defaults $PSNativeCommandUseErrorActionPreference to $true, which
+          # combined with GitHub Actions' $ErrorActionPreference = 'Stop' would turn this
+          # intentionally-nonzero exit into a terminating exception before we can inspect it.
+          $PSNativeCommandUseErrorActionPreference = $false
+
+          $shim = Join-Path $env:ZCLAUDE_DEST 'zclaude.cmd'
+          & $shim config "ci-test-key-123" | Out-Null
+          $output = (& $shim 2>&1 | Out-String)
+          $exit = $LASTEXITCODE
+          if ($exit -ne 127) { throw "expected exit 127 when claude CLI missing, got $exit" }
+          if ($output -notmatch 'claude CLI not found') { throw "missing expected error message; got:`n$output" }
+          Write-Host "OK: exited 127 with expected message"
+          # GitHub Actions appends `if ($LASTEXITCODE) { exit $LASTEXITCODE }` after this
+          # script; without resetting it, the step would fail on the stale 127 above even
+          # though our own assertions just passed.
+          $global:LASTEXITCODE = 0
+          exit 0
+
+      - name: Update (fetches latest install.ps1 from raw.githubusercontent.com)
+        shell: pwsh
+        continue-on-error: true
+        run: |
+          $PSNativeCommandUseErrorActionPreference = $false
+          $shim = Join-Path $env:ZCLAUDE_DEST 'zclaude.cmd'
+          & $shim update
+          Write-Host "update exited with $LASTEXITCODE"
+          exit 0
