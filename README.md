@@ -12,6 +12,19 @@ you interactively if you haven't included it yet), and from then on just run
 > Get a z.ai key by subscribing to the
 > [GLM Coding Plan](https://docs.z.ai/devpack/tool/claude).
 
+## Guides
+
+- [Technical Guide (English)](guide_en.md)
+- [Panduan Teknis (Bahasa Indonesia)](guide_id.md)
+
+## Acknowledgments
+
+This project is based on
+[deepclaude](https://github.com/RafiulM/deepclaude) by
+[Rafiul Islam](https://github.com/RafiulM), with updates to resolve 429
+(rate-limiting) errors, re-targeted for z.ai's GLM API, and documentation
+contributions by [sniperprime](https://github.com/sniperprime).
+
 ## Install (one command)
 
 ### macOS / Linux
