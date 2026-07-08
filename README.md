@@ -41,6 +41,15 @@ irm https://raw.githubusercontent.com/sniperprime/zclaude/main/install.ps1 | iex
 Installs `zclaude` into `%LOCALAPPDATA%\Programs\zclaude` and adds it to
 your user `PATH`. Open a **new** terminal afterward.
 
+> **Getting a `429` from `raw.githubusercontent.com`?** GitHub rate-limits
+> that endpoint per source IP — wait a minute and retry, or clone the repo
+> instead and run the installer locally:
+>
+> ```powershell
+> git clone --depth 1 https://github.com/sniperprime/zclaude.git $env:TEMP\zclaude
+> & "$env:TEMP\zclaude\install.ps1"
+> ```
+
 > On Windows you can also use the macOS/Linux command above from **Git Bash**
 > or **WSL**.
 

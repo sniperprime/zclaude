@@ -10,7 +10,12 @@ $Dest = Join-Path $env:LOCALAPPDATA 'Programs\zclaude'
 New-Item -ItemType Directory -Force -Path $Dest | Out-Null
 
 Write-Host "Installing zclaude to $Dest ..."
-Invoke-WebRequest -UseBasicParsing "$Repo/zclaude.ps1" -OutFile (Join-Path $Dest 'zclaude.ps1')
+$LocalSource = Join-Path $PSScriptRoot 'zclaude.ps1'
+if ($PSScriptRoot -and (Test-Path $LocalSource)) {
+  Copy-Item -Path $LocalSource -Destination (Join-Path $Dest 'zclaude.ps1') -Force
+} else {
+  Invoke-WebRequest -UseBasicParsing "$Repo/zclaude.ps1" -OutFile (Join-Path $Dest 'zclaude.ps1')
+}
 
 # A .cmd shim so `zclaude` works from cmd.exe and PowerShell alike.
 $shim = @'
