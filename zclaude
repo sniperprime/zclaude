@@ -105,8 +105,15 @@ case "${1:-}" in
     ;;
   update|--update|upgrade|--upgrade)
     say "Updating zclaude to the latest version..."
-    curl -fsSL "https://raw.githubusercontent.com/sniperprime/zclaude/main/install.sh" | bash
-    exit $?
+    if ! curl -fsSL "https://raw.githubusercontent.com/sniperprime/zclaude/main/install.sh" | bash; then
+      say ""
+      say "Update failed to fetch from raw.githubusercontent.com (it may be rate-limited)."
+      say "Wait a minute and retry, or install from a local clone:"
+      say "  git clone --depth 1 https://github.com/sniperprime/zclaude.git /tmp/zclaude"
+      say "  bash /tmp/zclaude/install.sh"
+      exit 1
+    fi
+    exit 0
     ;;
 esac
 

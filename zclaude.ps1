@@ -79,7 +79,16 @@ if ($args.Count -ge 1) {
     }
     '^(update|--update|upgrade|--upgrade)$' {
       Write-Host 'Updating zclaude to the latest version...'
-      irm 'https://raw.githubusercontent.com/sniperprime/zclaude/main/install.ps1' | iex
+      try {
+        irm 'https://raw.githubusercontent.com/sniperprime/zclaude/main/install.ps1' | iex
+      } catch {
+        Write-Host ''
+        Write-Host 'Update failed to fetch from raw.githubusercontent.com (it may be rate-limited).'
+        Write-Host 'Wait a minute and retry, or install from a local clone:'
+        Write-Host '  git clone --depth 1 https://github.com/sniperprime/zclaude.git $env:TEMP\zclaude'
+        Write-Host '  & "$env:TEMP\zclaude\install.ps1"'
+        exit 1
+      }
       exit 0
     }
   }
