@@ -23,6 +23,15 @@ curl -fsSL https://raw.githubusercontent.com/sniperprime/zclaude/main/install.sh
 Installs a single `zclaude` script into `~/.local/bin`. If that directory
 isn't on your `PATH`, the installer prints the line to add.
 
+> **Getting a `429` from `raw.githubusercontent.com`?** GitHub rate-limits
+> that endpoint per source IP — wait a minute and retry, or clone the repo
+> instead and run the installer locally:
+>
+> ```bash
+> git clone --depth 1 https://github.com/sniperprime/zclaude.git /tmp/zclaude
+> bash /tmp/zclaude/install.sh
+> ```
+
 ### Windows (PowerShell)
 
 ```powershell
